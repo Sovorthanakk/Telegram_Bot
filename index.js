@@ -3,6 +3,9 @@ import { Bot, InlineKeyboard } from "grammy";
 
 // Create bot instance
 const bot = new Bot(process.env.BOT_TOKEN);
+const app = express();
+
+const PORT = process.env.PORT || 3000;
 
 // Your chat ID for notifications (add to .env as NOTIFY_CHAT_ID=your_chat_id)
 const NOTIFY_CHAT_ID = process.env.NOTIFY_CHAT_ID;
@@ -28,9 +31,15 @@ async function notifyOwner(userId, userInfo, action) {
   }
   try {
     // Combine first and last name, handle missing last name
-    const fullName = userInfo.first_name + (userInfo.last_name ? " " + userInfo.last_name : "");
-    const username = userInfo.username ? `@${userInfo.username}` : "No username";
-    const message = `User Activity! 🔔\nUser ID: ${userId}\nFull Name: ${fullName || "Unknown"}\nUsername: ${username}\nAction: ${action}`;
+    const fullName =
+      userInfo.first_name +
+      (userInfo.last_name ? " " + userInfo.last_name : "");
+    const username = userInfo.username
+      ? `@${userInfo.username}`
+      : "No username";
+    const message = `User Activity! 🔔\nUser ID: ${userId}\nFull Name: ${
+      fullName || "Unknown"
+    }\nUsername: ${username}\nAction: ${action}`;
     await bot.api.sendMessage(NOTIFY_CHAT_ID, message);
   } catch (error) {
     console.error("Failed to send notification:", error);
@@ -74,3 +83,13 @@ bot.catch((err) => {
 // Start the bot
 bot.start();
 console.log("Bot is running...");
+
+// Add a simple health check endpoint so Render can detect open port
+app.get("/", (req, res) => {
+  res.send("Telegram bot is running");
+});
+
+// Start Express server
+app.listen(PORT, () => {
+  console.log(`HTTP server listening on port ${PORT}`);
+});
